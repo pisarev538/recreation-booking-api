@@ -1,0 +1,37 @@
+<div class="card shadow-sm mt-4">
+    <div class="card-body">
+        <h2 class="h5 mb-3">Комментарии</h2>
+
+        {% if user.is_authenticated %}
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="comment">
+                
+                {{ comment_form.content }}
+
+                <button type="submit" class="btn btn-primary">Отправить комментарий</button>
+            </form>
+        {% else %}
+            <p class="text-muted">
+                Чтобы оставить комментарий, нужно войти в аккаунт
+            </p>
+        {% endif %}
+
+        {% if comments%}
+            {% for comment in comments %}
+                <div class="border rounded p-3 mb-2">
+                    <div class="small text-muted mb-1">
+                        {{ comment.author_name }} . {{ comment.created_at }}
+                    </div>
+                    <div>
+                        {{ comment.content|linebreaks }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">
+                Пока нет комментариев
+            </p>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,55 @@
+{% extends "articles/base.html" %}
+
+
+{% block title %} Мои закладки {% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <h1 class="mb-4"> Мои закладки</h1>
+
+        {% if bookmarks %}
+            <div class="row g-3"> 
+                {% for bookmark in bookmarks %}
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5>{{bookmark.article.title}}</h5>
+                            </div>
+
+                            <div class="text-muted small mb-2">
+                                <span>
+                                    Автор: {{bookmark.article.author.username}}
+                                </span>
+
+                                {% if bookmark.article.category.name %}
+                                    <span class="mx-2">|</span>
+                                    <span>
+                                        Категория: {{bookmark.article.category.name}}
+                                    </span>
+                                {% endif %}
+
+                                <span class="mx-2">|</span>
+                                <span>
+                                    Добавлено: {{bookmark.created_at}}
+                                </span>
+                            </div>
+
+                            <p class="card-text">
+                                {{bookmark.article.content}}
+                            </p>
+
+                            <a href="{% url 'articles:article_detail' bookmark.article.pk %}" class="btn btn-outline-primary btn-sm">
+                                Читать полностью
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                У вас пока что нет статей в закладках
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock %}

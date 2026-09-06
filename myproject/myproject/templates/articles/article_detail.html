@@ -1,0 +1,137 @@
+{% extends "articles/base.html" %}
+
+{% block title %} {{article.title}} {% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="card shadow-sm mb-4">
+            {% if user.is_authenticated %}
+                <form id="bookmark-form" data-url="{% url 'articles:toggle_bookmark' article.pk %}" class="mt-3">
+                    {% csrf_token %}
+
+                    <button type="submit"
+                        id="bookmark-button"
+                        class="btn btn-outline-warning">
+                        {% if is_bookmarked %}
+                            ★ Убрать из закладок
+                        {% else %}
+                            ☆ Добавить в закладки
+                        {% endif %}
+                    </button>
+                    <span id="bookmark-count" class="ms-2 text-muted">
+                        В закладках {{ bookmarks_count }}
+                    </span>
+                </form>
+            {% endif %}
+            <div class="card-body">
+                <h1 class="card-title mb-3">{{article.title}}</h1>
+
+                <div class="text-muted small mb-3 d-flex align-items-center flex-wrap gap-2">
+                    <span>Автор: <strong>{{ article.author.username }}</strong></span>
+                    
+                    {% if user.is_authenticated and user != article.author %}
+                        {% if is_subscribed %}
+                            <a href="{% url 'articles:toggle_subscription' article.author.pk %}" class="btn btn-sm btn-secondary rounded-pill px-2 py-0 ms-2">
+                                🔕 Отписаться
+                            </a>
+                        {% else %}
+                            <a href="{% url 'articles:toggle_subscription' article.author.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0 ms-2">
+                                🔔 Подписаться
+                            </a>
+                        {% endif %}
+                    {% endif %}
+
+                    <span class="mx-2">|</span>
+                    <span>Опубликовано: {{article.create_at|date:"d.m.Y"}}</span>
+
+                    {% if article.category %}
+                        <span class="mx-2">|</span>
+                        <span>Категория: {{article.category.name}}</span>
+                    {% endif %}
+
+                    <span class="mx-2">|</span>
+                    <span class="text-secondary">⏱ {{ read_time }} мин. чтения</span>
+                </div>
+
+                <div class="article-content">
+                    <p>{{article.content|linebreaks}}</p>
+                </div>
+
+                <a class="btn btn-outline-secondary" href="{% url 'articles:article_list' %}">Вернуться на главную</a>
+            </div>
+        </div>
+
+        {% if similar_articles %}
+            <div class="mt-5 mb-4">
+                <h4 class="mb-3">📢 Читайте также по этой теме:</h4>
+                <div class="row row-cols-1 row-cols-md-3 g-3">
+                    {% for sim_article in similar_articles %}
+                        <div class="col">
+                            <div class="card h-100 shadow-sm border-0 bg-light">
+                                <div class="card-body d-flex flex-column justify-content-between">
+                                    <div>
+                                        <h6 class="card-title text-primary mb-1">{{ sim_article.title }}</h6>
+                                        <p class="text-muted small mb-2">Автор: {{ sim_article.author.username }}</p>
+                                    </div>
+                                    <a href="{% url 'articles:article_detail' sim_article.pk %}" class="btn btn-sm btn-outline-primary mt-2">
+                                        Читать ➔
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% include "articles/article_raiting.html" %}
+        {% include "articles/article_comments.html" %}
+    </div>
+
+    <script>
+        const bookmarkForm = document.getElementById("bookmark-form")
+
+        if (bookmarkForm){
+            bookmarkForm.addEventListener("submit", function(event){
+                event.preventDefault();
+                const url = bookmarkForm.dataset.url;
+                const crsfToken = bookmarkForm.querySelector(
+                    "[name=csrfmiddlewaretoken]"
+                ).value;
+
+                fetch(url, {
+                    method: "POST",
+                    headers:{
+                        "X-CSRFToken": crsfToken,
+                        "X-Requesed-With": "XMLHttpRequest"
+                    }
+                })
+                .then(function(responce){
+                    if (!responce.ok){
+                        throw new Error("Ошибка запроса");
+                    }
+
+                    return responce.json();
+                })
+                .then(function(data){
+                    console.log(data);
+                    const button = document.getElementById("bookmark-button");
+                    const count = document.getElementById("bookmark-count");
+
+                    if (data.is_bookmarked){
+                        button.textContent = "★ Убрать из закладок";
+                    }
+                    else{
+                        button.textContent = "☆ Добавить в закладки";
+                    }
+
+                    count.textContent = "В закладках: " + data.bookmarks_count;
+                })
+                .catch(function(error){
+                    alert("Не удалось изменить закладку");
+                    console.log(error);
+                });
+            });
+        }
+    </script>
+{% endblock %}

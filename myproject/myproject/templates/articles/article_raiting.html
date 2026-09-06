@@ -1,0 +1,52 @@
+<div class="card shadow-sm bm-4">
+    <div class="card-body"> 
+        <h2 class="h5 mb-3">Рейтинг статьи</h2>
+
+        {% if avg_rating %}
+            <p class="text-muted mb-2">
+                Средняя оценка: <strong>{{avg_rating|floatformat:1}}</strong> из 5
+            </p>
+        {% else %}
+            <p class="text-muted mb-2">
+                У статьи пока нет оценок
+            </p>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+            {% if article.author_id == user.id %}
+                <p class="text-muted mb-0">
+                    Вы автор статьи, оценка невозможна
+                </p>
+            {% elif has_rated %}
+                <p class="text-muted mb-0">
+                   Ваша оценка: <strong>{{user_rating.get_rating_display}}</strong>
+                </p>
+            {% else %}
+                <form method="post" class="mt-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="rating">
+                    
+                    <div class="mb-3">
+                        <label for="rating" class="form-label">Выберите оценку</label>
+                        <select name="rating" id="rating" class="form-select" required>
+                            {% for value, label in rating_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Комментарий к оценке</label>
+                            <textarea name="comment" id="comment" rows="3" class="form-control"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Оценить</button>
+                    </div>
+                </form>
+            {% endif %}
+        {% else %}
+            <p class="text-muted mb-0">
+                Чтобы поставить оценку, нужно войти в аккаунт
+            </p>
+        {% endif %}
+    </div>
+</div>
